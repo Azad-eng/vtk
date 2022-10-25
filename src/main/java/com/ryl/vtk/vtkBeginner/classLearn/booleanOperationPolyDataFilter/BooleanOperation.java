@@ -83,10 +83,4 @@ public class BooleanOperation {
         iren.Start();
 
     }
-
-    private void setOperationToUnion(){
-
-    }
-
-
 }

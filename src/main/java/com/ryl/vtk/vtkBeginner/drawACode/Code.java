@@ -66,6 +66,8 @@ public class Code {
         renWin.SetSize(300, 300);
         renWin.Render();
         //3.初始化交互器并真正开始
+        vtkInteractorStyleTrackballCamera viewStyle = new vtkInteractorStyleTrackballCamera();
+        iren.SetInteractorStyle(viewStyle);
         iren.Initialize();
         iren.Start();
     }
