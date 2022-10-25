@@ -24,26 +24,45 @@ public class StlModel {
         colors.GetColor("Tomato", input1ActorColor);
         double[] input2ActorColor = new double[3];
         colors.GetColor("Mint", input2ActorColor);
+        double[] booleanOperationActorColor = new double[3];
+        colors.GetColor("Banana", booleanOperationActorColor);
+        double[] rendererColor = new double[3];
+        colors.GetColor("Silver", rendererColor);
 
         //todo getProgramParameters()
-        String operation = args[0];
-        String fn1 = args[1];
-        String fn2 = args[2];
-        vtkPolyData poly1 = readPolyData("1.stl");
-        vtkTriangleFilter tri1 = new vtkTriangleFilter();
-        tri1.SetInputData(poly1);
-        vtkCleanPolyData clean1 = new vtkCleanPolyData();
-        clean1.SetInputConnection(tri1.GetOutputPort());
-        clean1.Update();
-        vtkPolyData input1 = clean1.GetOutput();
+        String operation = "difference" /*args[0]*/;
+//        String fn1 = args[1];
+//        String fn2 = args[2];
+        vtkPolyData input1;
+        vtkPolyData input2;
+//        if ( fn1 != null && fn2 != null){
+//            vtkPolyData poly1 = readPolyData(fn1);
+//            vtkTriangleFilter tri1 = new vtkTriangleFilter();
+//            tri1.SetInputData(poly1);
+//            vtkCleanPolyData clean1 = new vtkCleanPolyData();
+//            clean1.SetInputConnection(tri1.GetOutputPort());
+//            clean1.Update();
+//            input1 = clean1.GetOutput();
+//
+//            vtkPolyData poly2= readPolyData(fn2);
+//            vtkTriangleFilter tri2 = new vtkTriangleFilter();
+//            tri2.SetInputData(poly2);
+//            vtkCleanPolyData clean2 = new vtkCleanPolyData();
+//            clean2.SetInputConnection(tri2.GetOutputPort());
+//            clean2.Update();
+//            input2 = clean2.GetOutput();
+//        } else {
+            vtkSphereSource sphereSource1 = new vtkSphereSource();
+            sphereSource1.SetCenter(0.25, 0, 0);
+            sphereSource1.SetPhiResolution(21);
+            sphereSource1.SetThetaResolution(21);
+            sphereSource1.Update();
+            input1 = sphereSource1.GetOutput();
 
-        vtkPolyData poly2= readPolyData("2.stl");
-        vtkTriangleFilter tri2 = new vtkTriangleFilter();
-        tri2.SetInputData(poly2);
-        vtkCleanPolyData clean2 = new vtkCleanPolyData();
-        clean2.SetInputConnection(tri2.GetOutputPort());
-        clean2.Update();
-        vtkPolyData input2 = clean2.GetOutput();
+            vtkSphereSource sphereSource2 = new vtkSphereSource();
+            sphereSource2.Update();
+            input2 = sphereSource2.GetOutput();
+//        }
 
         vtkPolyDataMapper input1Mapper = new vtkPolyDataMapper();
         input1Mapper.SetInputData(input1);
@@ -66,34 +85,58 @@ public class StlModel {
         input2Actor.SetPosition(-(input1.GetBounds()[1] - input1.GetBounds()[0]), 0, 0);
 
         vtkBooleanOperationPolyDataFilter booleanOperation = new vtkBooleanOperationPolyDataFilter();
+        if ("union".equalsIgnoreCase(operation)) {
+            booleanOperation.SetOperationToUnion();
+        } else if ("intersection".equalsIgnoreCase(operation)) {
+            booleanOperation.SetOperationToIntersection();
+        } else if ("difference".equalsIgnoreCase(operation)){
+            booleanOperation.SetOperationToDifference();
+        } else {
+            System.out.println("Unknown operation:" + operation);
+        }
+        booleanOperation.SetInputData(0, input1);
+        booleanOperation.SetInputData(1, input2);
 
+        vtkPolyDataMapper booleanOperationMapper = new vtkPolyDataMapper();
+        booleanOperationMapper.SetInputConnection(booleanOperation.GetOutputPort());
+        booleanOperationMapper.ScalarVisibilityOff();
+
+        vtkActor booleanOperationActor  = new vtkActor();
+        booleanOperationActor.SetMapper(booleanOperationMapper);
+        booleanOperationActor.GetProperty().SetDiffuseColor(booleanOperationActorColor);
+        booleanOperationActor.GetProperty().SetSpecular(0.6);
+        booleanOperationActor.GetProperty().SetSpecularPower(20);
+
+        vtkRenderer renderer = new vtkRenderer();
+        renderer.AddViewProp(input1Actor);
+        renderer.AddViewProp(input2Actor);
+        renderer.AddViewProp(booleanOperationActor);
+        renderer.SetBackground(rendererColor);
+
+        vtkRenderWindow renderWindow = new vtkRenderWindow();
+        renderWindow.AddRenderer(renderer);
+        renderWindow.SetSize(640, 480);
+        renderWindow.SetWindowName("BooleanOperationPolyDataFilter");
+
+        double[] viewUp = {0.0, 0.0, 1.0};
+        double[] position = {0.0, -1.0, 10.0};
+        positionCamera(renderer, viewUp, position);
+        renderer.GetActiveCamera().Dolly(1.4);
+        renderer.ResetCameraClippingRange();
+
+        vtkRenderWindowInteractor renWinInteractor = new vtkRenderWindowInteractor();
+        renWinInteractor.SetRenderWindow(renderWindow);
+        renderWindow.Render();
+        vtkInteractorStyleTrackballCamera viewStyle = new vtkInteractorStyleTrackballCamera();
+        renWinInteractor.SetInteractorStyle(viewStyle);
+        renWinInteractor.Initialize();
+        renWinInteractor.Start();
     }
 
-    public static vtkActor getBooleanOperationActor(int operation){
-        vtkSTLReader stlModel1 = new vtkSTLReader();
-        stlModel1.SetFileName("a.stl");
-        stlModel1.Update();
-
-        vtkSTLReader stlReader2 = new vtkSTLReader();
-        stlReader2.SetFileName("b.stl");
-        stlReader2.Update();
-
-        vtkPolyDataMapper mapper1 = new vtkPolyDataMapper();
-        mapper1.SetInputConnection(stlReader2.GetOutputPort());
-        vtkActor actor1 = new vtkActor();
-        actor1.SetMapper(mapper1);
-        actor1.SetPosition(-19, +3.5, -19);
-
-        vtkBooleanOperationPolyDataFilter boolFilter = new vtkBooleanOperationPolyDataFilter();
-        boolFilter.SetOperation(operation);
-        boolFilter.SetInputConnection(0, stlModel1.GetOutputPort());
-        boolFilter.SetInputConnection(1, stlReader2.GetOutputPort());
-
-        vtkPolyDataMapper mapper = new vtkPolyDataMapper();
-        mapper.SetInputConnection(boolFilter.GetOutputPort());
-        vtkActor actor = new vtkActor();
-        actor.SetMapper(mapper);
-        return actor;
+    private static void positionCamera(vtkRenderer renderer, double[] viewUp, double[] position){
+        renderer.GetActiveCamera().SetViewUp(viewUp);
+        renderer.GetActiveCamera().SetPosition(position);
+        renderer.ResetCamera();
     }
 
     public static vtkPolyData readPolyData(String fileName){
@@ -133,6 +176,33 @@ public class StlModel {
         }
 
         return polyData;
+    }
+
+    public static vtkActor getBooleanOperationActor(int operation){
+        vtkSTLReader stlModel1 = new vtkSTLReader();
+        stlModel1.SetFileName("a.stl");
+        stlModel1.Update();
+
+        vtkSTLReader stlReader2 = new vtkSTLReader();
+        stlReader2.SetFileName("b.stl");
+        stlReader2.Update();
+
+        vtkPolyDataMapper mapper1 = new vtkPolyDataMapper();
+        mapper1.SetInputConnection(stlReader2.GetOutputPort());
+        vtkActor actor1 = new vtkActor();
+        actor1.SetMapper(mapper1);
+        actor1.SetPosition(-19, +3.5, -19);
+
+        vtkBooleanOperationPolyDataFilter boolFilter = new vtkBooleanOperationPolyDataFilter();
+        boolFilter.SetOperation(operation);
+        boolFilter.SetInputConnection(0, stlModel1.GetOutputPort());
+        boolFilter.SetInputConnection(1, stlReader2.GetOutputPort());
+
+        vtkPolyDataMapper mapper = new vtkPolyDataMapper();
+        mapper.SetInputConnection(boolFilter.GetOutputPort());
+        vtkActor actor = new vtkActor();
+        actor.SetMapper(mapper);
+        return actor;
     }
 
     public static vtkActor getBooleanOperationActor(double x, int operation){
