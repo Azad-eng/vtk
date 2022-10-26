@@ -7,8 +7,8 @@ import vtk.*;
  */
 public class StlModel {
     static {
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\awt.dll");
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\jawt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\awt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\jawt.dll");
         if (!vtkNativeLibrary.LoadAllNativeLibraries()){
             for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
                 if (!lib.IsLoaded()){
@@ -19,6 +19,43 @@ public class StlModel {
         vtkNativeLibrary.DisableOutputWindow(null);
     }
     public static void main(String[] args) {
+        //todo getProgramParameters()
+        String operation = "difference";
+        //String fn1 = "stl/猫头鹰1.stl";
+        String fn1 = null;
+        String fn2 = null;
+        //String fn2 = "stl/耳朵.stl";
+        vtkPolyData input1;
+        vtkPolyData input2;
+        if ( fn1 != null && fn2 != null){
+            vtkPolyData poly1 = readPolyData(fn1);
+            vtkTriangleFilter tri1 = new vtkTriangleFilter();
+            tri1.SetInputData(poly1);
+            vtkCleanPolyData clean1 = new vtkCleanPolyData();
+            clean1.SetInputConnection(tri1.GetOutputPort());
+            clean1.Update();
+            input1 = clean1.GetOutput();
+
+            vtkPolyData poly2= readPolyData(fn2);
+            vtkTriangleFilter tri2 = new vtkTriangleFilter();
+            tri2.SetInputData(poly2);
+            vtkCleanPolyData clean2 = new vtkCleanPolyData();
+            clean2.SetInputConnection(tri2.GetOutputPort());
+            clean2.Update();
+            input2 = clean2.GetOutput();
+        } else {
+            vtkSphereSource sphereSource1 = new vtkSphereSource();
+            sphereSource1.SetCenter(0.25, 0, 0);
+            sphereSource1.SetPhiResolution(10);
+            sphereSource1.SetThetaResolution(21);
+            sphereSource1.Update();
+            input1 = sphereSource1.GetOutput();
+
+            vtkSphereSource sphereSource2 = new vtkSphereSource();
+            sphereSource2.Update();
+            input2 = sphereSource2.GetOutput();
+        }
+
         vtkNamedColors colors = new vtkNamedColors();
         double[] input1ActorColor = new double[3];
         colors.GetColor("Tomato", input1ActorColor);
@@ -29,41 +66,6 @@ public class StlModel {
         double[] rendererColor = new double[3];
         colors.GetColor("Silver", rendererColor);
 
-        //todo getProgramParameters()
-        String operation = "difference" /*args[0]*/;
-//        String fn1 = args[1];
-//        String fn2 = args[2];
-        vtkPolyData input1;
-        vtkPolyData input2;
-//        if ( fn1 != null && fn2 != null){
-//            vtkPolyData poly1 = readPolyData(fn1);
-//            vtkTriangleFilter tri1 = new vtkTriangleFilter();
-//            tri1.SetInputData(poly1);
-//            vtkCleanPolyData clean1 = new vtkCleanPolyData();
-//            clean1.SetInputConnection(tri1.GetOutputPort());
-//            clean1.Update();
-//            input1 = clean1.GetOutput();
-//
-//            vtkPolyData poly2= readPolyData(fn2);
-//            vtkTriangleFilter tri2 = new vtkTriangleFilter();
-//            tri2.SetInputData(poly2);
-//            vtkCleanPolyData clean2 = new vtkCleanPolyData();
-//            clean2.SetInputConnection(tri2.GetOutputPort());
-//            clean2.Update();
-//            input2 = clean2.GetOutput();
-//        } else {
-            vtkSphereSource sphereSource1 = new vtkSphereSource();
-            sphereSource1.SetCenter(0.25, 0, 0);
-            sphereSource1.SetPhiResolution(21);
-            sphereSource1.SetThetaResolution(21);
-            sphereSource1.Update();
-            input1 = sphereSource1.GetOutput();
-
-            vtkSphereSource sphereSource2 = new vtkSphereSource();
-            sphereSource2.Update();
-            input2 = sphereSource2.GetOutput();
-//        }
-
         vtkPolyDataMapper input1Mapper = new vtkPolyDataMapper();
         input1Mapper.SetInputData(input1);
         input1Mapper.ScalarVisibilityOff();
@@ -72,7 +74,7 @@ public class StlModel {
         input1Actor.GetProperty().SetDiffuseColor(input1ActorColor);
         input1Actor.GetProperty().SetSpecular(0.6);
         input1Actor.GetProperty().SetSpecularPower(20);
-        input1Actor.SetPosition(input1.GetBounds()[1] - input1.GetBounds()[0], 0, 0);
+        input1Actor.SetPosition(0, 0, 0);
 
         vtkPolyDataMapper input2Mapper = new vtkPolyDataMapper();
         input2Mapper.SetInputData(input2);
@@ -82,7 +84,7 @@ public class StlModel {
         input2Actor.GetProperty().SetDiffuseColor(input2ActorColor);
         input2Actor.GetProperty().SetSpecular(0.6);
         input2Actor.GetProperty().SetSpecularPower(20);
-        input2Actor.SetPosition(-(input1.GetBounds()[1] - input1.GetBounds()[0]), 0, 0);
+        input2Actor.SetPosition(10, 0, 0);
 
         vtkBooleanOperationPolyDataFilter booleanOperation = new vtkBooleanOperationPolyDataFilter();
         if ("union".equalsIgnoreCase(operation)) {

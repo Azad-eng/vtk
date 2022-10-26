@@ -7,8 +7,8 @@ import vtk.*;
  */
 public class Code {
     static {
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\awt.dll");
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\jawt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\awt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\jawt.dll");
         if (!vtkNativeLibrary.LoadAllNativeLibraries()){
             for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
                 if (!lib.IsLoaded()){

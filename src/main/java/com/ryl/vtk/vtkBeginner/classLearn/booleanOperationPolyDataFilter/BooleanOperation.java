@@ -7,8 +7,8 @@ import vtk.*;
  */
 public class BooleanOperation {
     static {
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\awt.dll");
-        System.load("D:\\software\\jdk1.8\\jre\\bin\\jawt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\awt.dll");
+        System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\jawt.dll");
         if (!vtkNativeLibrary.LoadAllNativeLibraries()){
             for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
                 if (!lib.IsLoaded()){
@@ -20,67 +20,106 @@ public class BooleanOperation {
     }
     public static void main(String[] args) {
         //CREATE A SPHERE AND CYLINDER
-        //1.创建一个vtkConeSource的实例
+        //创建一个vtkConeSource的实例sphere
         vtkSphereSource sphere = new vtkSphereSource();
-        vtkCylinderSource cylinder = new vtkCylinderSource();
-        //2.设置基本属性
-        sphere.SetRadius(2.0);
-        sphere.SetThetaResolution(40);
-        sphere.SetPhiResolution(40);
+        //设置基本属性
+        sphere.SetRadius(5.0);
+        sphere.SetThetaResolution(10);
+        sphere.SetPhiResolution(10);
         sphere.Update();
-        cylinder.SetRadius(3.0);
-        cylinder.SetHeight(40);
+        vtkAlgorithmOutput input1 = sphere.GetOutputPort();
+        //创建一个vtkConeSource的实例cylinder
+        vtkCylinderSource cylinder = new vtkCylinderSource();
+        cylinder.SetRadius(2.0);
+        cylinder.SetHeight(20);
+        cylinder.SetResolution(10);
         cylinder.Update();
+        //设置基本属性
+        vtkAlgorithmOutput input2 = cylinder.GetOutputPort();
 
         //CREATE COLORS
         //1.颜色属性
-        vtkNamedColors coneNamedColors = new vtkNamedColors();
+        vtkNamedColors colors = new vtkNamedColors();
         //2.actor颜色
-        double[] actorColor = new double[4];
-        coneNamedColors.GetColor("MediumVioletRed", actorColor);
+        double[] sphereActorColor = new double[4];
+        colors.GetColor("Tomato", sphereActorColor);
+        double[] cylinderActorColor = new double[4];
+        colors.GetColor("Mint", cylinderActorColor);
         //3.背景颜色
         double[] bgColor = new double[4];
-        coneNamedColors.GetColor("Wheat", bgColor);
+        colors.GetColor("Silver", bgColor);
 
         //CREATE MAPPERS AND ACTORS
-        //1.创建vtkPolyDataMapper并且映射cone source得到一个相关的mapper（映射器）
+        //创建vtkPolyDataMapper并且映射sphere source得到一个相关的mapper（映射器）
         vtkPolyDataMapper sphereMapper = new vtkPolyDataMapper();
-        vtkPolyDataMapper cylinderMapper = new vtkPolyDataMapper();
-        sphereMapper.SetInputConnection(sphere.GetOutputPort());
+        sphereMapper.SetInputConnection(input1);
         sphereMapper.ScalarVisibilityOff();
-        cylinderMapper.SetInputConnection(cylinder.GetOutputPort());
-        cylinderMapper.ScalarVisibilityOff();
-        //2.创建一个actor并且分配mapper
+        //创建一个sphereActor并且分配mapper
         vtkActor sphereActor = new vtkActor();
-        vtkActor cylinderActor = new vtkActor();
         sphereActor.SetMapper(sphereMapper);
+        //设置sphereActor颜色属性
+        sphereActor.GetProperty().SetColor(sphereActorColor);
+
+        //创建vtkPolyDataMapper并且映射cylinder source得到一个相关的mapper（映射器）
+        vtkPolyDataMapper cylinderMapper = new vtkPolyDataMapper();
+        cylinderMapper.SetInputConnection(input2);
+        cylinderMapper.ScalarVisibilityOff();
+        //创建一个cylinderActor并且分配mapper
+        vtkActor cylinderActor = new vtkActor();
         cylinderActor.SetMapper(cylinderMapper);
-        //3.设置actor颜色属性
-        sphereActor.GetProperty().SetColor(actorColor);
+        //设置cylinderActor颜色属性
+        cylinderActor.GetProperty().SetColor(cylinderActorColor);
+        cylinderActor.SetPosition(0,5,0);
+
+        //START BOOLEAN OPERATION
+        vtkBooleanOperationPolyDataFilter booleanOperation = new vtkBooleanOperationPolyDataFilter();
+        //booleanOperation.SetOperationToUnion();
+        booleanOperation.SetOperationToIntersection();
+        //booleanOperation.SetOperationToDifference();
+        booleanOperation.SetInputConnection(0, input1);
+        booleanOperation.SetInputConnection(1, input2);
+        //创建vtkPolyDataMapper并且映射booleanOperation source得到一个相关的mapper（映射器）
+        vtkPolyDataMapper booleanOperationMapper = new vtkPolyDataMapper();
+        booleanOperationMapper.SetInputConnection(booleanOperation.GetOutputPort());
+        booleanOperationMapper.ScalarVisibilityOff();
+        //创建一个booleanOperationActor并且分配mapper
+        vtkActor booleanOperationActor  = new vtkActor();
+        booleanOperationActor.SetMapper(booleanOperationMapper);
+        //设置booleanOperationActor颜色属性
+        double[] booleanOperationActorColor = new double[3];
+        colors.GetColor("Banana", booleanOperationActorColor);
+        booleanOperationActor.GetProperty().SetColor(booleanOperationActorColor);
+        booleanOperationActor.SetPosition(0,0,0);
 
         //Create the renderer, render window and interactor
-        //1.创建一个render（渲染器）并且添加actors
-        vtkRenderer ren = new vtkRenderer();
-        ren.AddActor(sphereActor);
-        ren.AddActor(cylinderActor);
-        //2.创建一个render window（渲染窗口） 并添加render
-        vtkRenderWindow renWin = new vtkRenderWindow();
-        renWin.AddRenderer(ren);
-        //3.创建一个window interactor（窗口交互器）并添加window
-        vtkRenderWindowInteractor iren = new vtkRenderWindowInteractor();
-        iren.SetRenderWindow(renWin);
+        vtkRenderer renderer = new vtkRenderer();
+        //renderer.AddViewProp(sphereActor);
+        //renderer.AddViewProp(cylinderActor);
+        renderer.AddViewProp(booleanOperationActor);
+        renderer.SetBackground(bgColor);
 
-        //Visualise the cone
-        //1.设置渲染器背景色
-        ren.SetBackground(0.3,0.4,0.5);
-        //2.设置渲染窗口尺寸并开始渲染
-        renWin.SetSize(450, 450);
-        renWin.Render();
-        //3.初始化交互器并真正开始
+        vtkRenderWindow renderWindow = new vtkRenderWindow();
+        renderWindow.AddRenderer(renderer);
+        renderWindow.SetSize(400, 360);
+
+        double[] viewUp = {0.0, 0.0, 1.0};
+        double[] position = {0.0, -1.0, 10.0};
+        positionCamera(renderer, viewUp, position);
+        renderer.GetActiveCamera().Dolly(1.4);
+        renderer.ResetCameraClippingRange();
+
+        vtkRenderWindowInteractor renWinInteractor = new vtkRenderWindowInteractor();
+        renWinInteractor.SetRenderWindow(renderWindow);
+        renderWindow.Render();
         vtkInteractorStyleTrackballCamera viewStyle = new vtkInteractorStyleTrackballCamera();
-        iren.SetInteractorStyle(viewStyle);
-        iren.Initialize();
-        iren.Start();
+        renWinInteractor.SetInteractorStyle(viewStyle);
+        renWinInteractor.Initialize();
+        renWinInteractor.Start();
+    }
 
+    private static void positionCamera(vtkRenderer renderer, double[] viewUp, double[] position){
+        renderer.GetActiveCamera().SetViewUp(viewUp);
+        renderer.GetActiveCamera().SetPosition(position);
+        renderer.ResetCamera();
     }
 }
