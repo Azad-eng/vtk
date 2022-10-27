@@ -5,7 +5,7 @@ import vtk.*;
 /**
  * @author: EFL-ryl
  */
-public class Code {
+public class Cone {
     static {
         System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\awt.dll");
         System.load("C:\\Program Files\\Java\\jdk1.8.0_211\\jre\\bin\\jawt.dll");

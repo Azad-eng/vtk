@@ -20,7 +20,7 @@ public class StlModel {
     }
     public static void main(String[] args) {
         //todo getProgramParameters()
-        String operation = "difference";
+        String operation = "intersection";
         //String fn1 = "stl/猫头鹰1.stl";
         String fn1 = null;
         String fn2 = null;
@@ -71,7 +71,7 @@ public class StlModel {
         input1Mapper.ScalarVisibilityOff();
         vtkActor input1Actor = new vtkActor();
         input1Actor.SetMapper(input1Mapper);
-        input1Actor.GetProperty().SetDiffuseColor(input1ActorColor);
+        input1Actor.GetProperty().SetColor(input1ActorColor);
         input1Actor.GetProperty().SetSpecular(0.6);
         input1Actor.GetProperty().SetSpecularPower(20);
         input1Actor.SetPosition(0, 0, 0);
@@ -81,10 +81,10 @@ public class StlModel {
         input2Mapper.ScalarVisibilityOff();
         vtkActor input2Actor = new vtkActor();
         input2Actor.SetMapper(input2Mapper);
-        input2Actor.GetProperty().SetDiffuseColor(input2ActorColor);
+        input2Actor.GetProperty().SetColor(input2ActorColor);
         input2Actor.GetProperty().SetSpecular(0.6);
         input2Actor.GetProperty().SetSpecularPower(20);
-        input2Actor.SetPosition(10, 0, 0);
+        input2Actor.SetPosition(0, 0, 0);
 
         vtkBooleanOperationPolyDataFilter booleanOperation = new vtkBooleanOperationPolyDataFilter();
         if ("union".equalsIgnoreCase(operation)) {
@@ -105,7 +105,7 @@ public class StlModel {
 
         vtkActor booleanOperationActor  = new vtkActor();
         booleanOperationActor.SetMapper(booleanOperationMapper);
-        booleanOperationActor.GetProperty().SetDiffuseColor(booleanOperationActorColor);
+        booleanOperationActor.GetProperty().SetColor(booleanOperationActorColor);
         booleanOperationActor.GetProperty().SetSpecular(0.6);
         booleanOperationActor.GetProperty().SetSpecularPower(20);
 
